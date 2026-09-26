@@ -1,12 +1,16 @@
 function createShield()
-    return {shield = {time=10,active=false}}
+    return {time=10,active=false}
 end
 function createShieldSettings()
-    return {time = 5}
+    return {time = 5, width = 50, height = 50}
 end
 function createPaddleExtender()
-    return {paddle_extender = {time=5,active=false}}
+    return {time=5,active=false}
 end
 function createPaddleExtenderSettings()
-    return {time = 2}
+    return {time = 2,width = 50, height = 50}
+end
+function createBoostersForPlayer()
+    local boosters = {["shield"] = createShield(), ["paddle_extender"] = createPaddleExtender()}
+    return boosters
 end

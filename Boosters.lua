@@ -26,12 +26,14 @@ Booster = Class{}
     have their own x, y, width, and height values, thus serving as containers
     for data. In this sense, they're very similar to structs in C.
 ]]
-function Booster:init(x, y, sprite, name, time)
+function Booster:init(x, y, sprite, name, time, width, height)
     self.x = x
     self.y = y
     self.sprite = love.graphics.newImage(sprite)
-    self.width = self.sprite: getWidth() * 0.1
-    self.height = self.sprite: getHeight() * 0.1
+    self.width = width
+    self.height = height
+    self.sx = self.width / self.sprite : getWidth()
+    self.sy = self.height / self.sprite : getHeight()
     self.visible = false
     self.name = name
     self.time = time
@@ -68,7 +70,7 @@ end
 function Booster:render()
     if self.visible then
         love.graphics.setColor(0, 0.3, 1, 0.5)
-        love.graphics.draw(self.sprite, self.x, self.y, 0, 0.1, 0.1)
+        love.graphics.draw(self.sprite, self.x, self.y, 0, self.sx, self.sy)
         love.graphics.setColor(1, 1, 1, 1)
     end
 end

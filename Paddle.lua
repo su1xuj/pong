@@ -54,12 +54,16 @@ end
 
 --  processing boosters
 function Paddle:processing_boosters(dt)
-    for index, buster in pairs(self.boosters) do
-        if buster.active then
-            buster.time = buster.time - dt
+    for name, booster in pairs(self.boosters) do
+        if booster.active then
+            booster.time = booster.time - dt
         end
-        if buster.time <= 0 and buster.active then
-            self.boosters = createShield()
+        if booster.time <= 0 and booster.active then
+            if name == "shield" then
+                self.boosters[name] = createShield()
+            elseif name == "paddle_extender" then
+                self.boosters[name] = createPaddleExtender()
+            end
         end
     end
 end

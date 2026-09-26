@@ -97,13 +97,13 @@ function love.load()
     -- actual window no matter its dimensions
     push.setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, { upscale = 'normal' })
 
-    -- boosters effects initialize
-    boosters = createShield()
+    -- boosters effects initialize for players
+    boostersForPlayers = createBoostersForPlayer()
 
     -- initialize our player paddles; make them global so that they can be
     -- detected by other functions and modules
-    player1 = Paddle(10, 30, 5, 20, createShield())
-    player2 = Paddle(VIRTUAL_WIDTH - 15, VIRTUAL_HEIGHT - 30, 5, 20, createShield())
+    player1 = Paddle(10, 30, 5, 20, createBoostersForPlayer())
+    player2 = Paddle(VIRTUAL_WIDTH - 15, VIRTUAL_HEIGHT - 30, 5, 20, createBoostersForPlayer())
 
     -- place a ball in the middle of the screen
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
@@ -111,13 +111,22 @@ function love.load()
     -- initialize boosters setings
     shield_settings = createShieldSettings()
     paddle_extender_settings = createPaddleExtenderSettings()
-    -- initialize boosters 
-    shield_booster = Booster(0, 0, 'sprites/shield.png', 'shield', shield_settings.time)
-    paddle_extender = Booster(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', paddle_extender_settings.time)
 
-    -- initialize effects
-    shield_effect_player1 = Effect(player1.x + player1.width + 20, 0, 'sprites/shield.png', 'shield')
-    shield_effect_player2 = Effect(player2.x - 20, 0, 'sprites/shield.png', 'shield')
+    -- table for all settings
+    settings = {["shield"] = shield_settings, ["paddle_extender"] = paddle_extender_settings}
+
+    -- initialize boosters 
+    shield_booster = Booster(0, 0, 'sprites/shield.png', 'shield', shield_settings.time, shield_settings.width, shield_settings.height)
+    paddle_extender_booster = Booster(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', paddle_extender_settings.time, paddle_extender_settings.width, paddle_extender_settings.height)
+
+    -- initialize effects icons
+    shield_effect_player1 = Effect(player1.x + player1.width + 20, 0, 'sprites/shield.png', 'shield', 12, 12)
+    shield_effect_player2 = Effect(player2.x - 20, 0, 'sprites/shield.png', 'shield', 12, 12)
+    padlle_extender_effect_player1 = Effect(player1.x + player1.width + 20 + 40, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
+    padlle_extender_effect_player2 = Effect(player2.x - 20 - 40, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
+
+    -- global table with all boosters objects
+    boosters = {shield_booster, paddle_extender_booster }
 
     -- initialize score variables
     player1Score = 0
@@ -167,46 +176,71 @@ function love.update(dt)
         else
             ball.dx = -math.random(140, 200)
         end
+
         -- hide shield
-        shield_booster.visible = false
-        shield_booster.time = shield_settings.time
-        player1.boosters = createShield()
-        player2.boosters = createShield()
+        for _, booster in ipairs(boosters) do
+            booster.visible = false
+            booster.time = settings[booster.name].time
+        end
+
+
+        player1.boosters = createBoostersForPlayer()
+        player2.boosters = createBoostersForPlayer()
     elseif gameState == 'play' then
+
         -- boosters sprite spawn
-        shield_booster.time = shield_booster.time - dt
-        if shield_booster.time <=0 then
-            shield_booster.time = shield_settings.time
-            shield_booster.x = math.random(player1.x + player1.width + 10, player2.x - 10)
-            shield_booster.y = math.random(0, VIRTUAL_HEIGHT - 10)
-            shield_booster.visible = true
+        for _, booster in ipairs(boosters) do
+            booster.time = booster.time - dt
+            if booster.time <=0 then
+                booster.time = settings[booster.name].time
+                booster.x = math.random(player1.x + player1.width + 10, player2.x - 10)
+                booster.y = math.random(0, VIRTUAL_HEIGHT - 10)
+                booster.visible = true
+            end
         end
 
         -- delete boosters if booster have colision with ball
-        if shield_booster: collides(ball) then
-            shield_booster.visible = false
-            -- We check who the ball is coming from.
-            if ball.dx > 0 then
-                player1.boosters.shield.active = true
-                player1.boosters.shield.time = boosters.shield.time
-            else
-                player2.boosters.shield.active = true
-                player2.boosters.shield.time = boosters.shield.time
+        for _, booster in ipairs(boosters) do
+            if booster: collides(ball) then
+                booster.visible = false
+                -- We check who the ball is coming from.
+                if ball.dx > 0 then
+                    player1.boosters[booster.name].active = true
+                    player1.boosters[booster.name].time = boostersForPlayers[booster.name].time
+                else
+                    player2.boosters[booster.name].active = true
+                    player2.boosters[booster.name].time = boostersForPlayers[booster.name].time
+                end
             end
         end
         -- on effect icon 
-        if player1.boosters.shield.active then
+        if player1.boosters['shield'].active then
             shield_effect_player1.visible = true
-            shield_effect_player1.time = player1.boosters.shield.time
-        else 
+            shield_effect_player1.time = player1.boosters['shield'].time
+        else
             shield_effect_player1.visible = false
         end
-        if player2.boosters.shield.active then
+        if player2.boosters['shield'].active then
             shield_effect_player2.visible = true
-            shield_effect_player2.time = player2.boosters.shield.time
-        else 
+            shield_effect_player2.time = player2.boosters['shield'].time
+        else
             shield_effect_player2.visible = false
         end
+
+        if player1.boosters['paddle_extender'].active then
+            padlle_extender_effect_player1.visible = true
+            padlle_extender_effect_player1.time = player1.boosters['paddle_extender'].time
+        else
+            padlle_extender_effect_player1.visible = false
+        end
+        if player2.boosters['paddle_extender'].active then
+            padlle_extender_effect_player2.visible = true
+            padlle_extender_effect_player2.time = player2.boosters['paddle_extender'].time
+        else
+            padlle_extender_effect_player2.visible = false
+        end
+       
+        
         -- detect ball collision with paddles, reversing dx if true and
         -- slightly increasing it, then altering the dy based on the position
         -- at which it collided, then playing a sound effect
@@ -259,7 +293,7 @@ function love.update(dt)
                 ball.x = player1.x + player1.width
                 ball.dx = -ball.dx
                 sounds['shield_broke']:play()
-                player1.boosters = createShield()
+                player1.boosters["shield"] = createShield()
             else
                 servingPlayer = 1
                 player2Score = player2Score + 1
@@ -283,7 +317,7 @@ function love.update(dt)
                 ball.x = player2.x
                 ball.dx = -ball.dx
                 sounds['shield_broke']:play()
-                player2.boosters = createShield()
+                player2.boosters["shield"] = createShield()
             else
                 servingPlayer = 2
                 player1Score = player1Score + 1
@@ -409,10 +443,14 @@ function love.draw()
     displayScore()
     shield_effect_player1:render()
     shield_effect_player2:render()
+    padlle_extender_effect_player1:render()
+    padlle_extender_effect_player2:render()
     player1:render()
     player2:render()
     ball:render()
-    shield_booster:render()
+    for _, booster in ipairs(boosters) do
+        booster:render()
+    end
     -- display FPS for debugging; simply comment out to remove
     displayFPS()
 
