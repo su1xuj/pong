@@ -84,7 +84,8 @@ function love.load()
         ['paddle_hit'] = love.audio.newSource('sounds/paddle_hit.wav', 'static'),
         ['score'] = love.audio.newSource('sounds/score.wav', 'static'),
         ['wall_hit'] = love.audio.newSource('sounds/wall_hit.wav', 'static'),
-        ['shield_broke'] = love.audio.newSource('sounds/shield_broke.mp3', 'static')
+        ['shield_broke'] = love.audio.newSource('sounds/shield_broke.mp3', 'static'),
+        ['growth_effect'] = love.audio.newSource('sounds/growth_effect.mp3', 'static')
     }
 
     love.window.setMode(WINDOW_WIDTH, WINDOW_HEIGHT, {
@@ -211,6 +212,9 @@ function love.update(dt)
                     player2.boosters[booster.name].active = true
                     player2.boosters[booster.name].time = boostersForPlayers[booster.name].time
                 end
+                if booster.name == 'paddle_extender' then
+                    sounds['growth_effect']:play()
+                end
             end
         end
         -- on effect icon 
@@ -240,7 +244,9 @@ function love.update(dt)
             padlle_extender_effect_player2.visible = false
         end
        
-        
+        -- paddle extender booster effects
+        extendPaddle(player1)
+        extendPaddle(player2)
         -- detect ball collision with paddles, reversing dx if true and
         -- slightly increasing it, then altering the dy based on the position
         -- at which it collided, then playing a sound effect
@@ -479,4 +485,12 @@ function displayFPS()
     love.graphics.setColor(0, 255/255, 0, 255/255)
     love.graphics.print('FPS: ' .. tostring(love.timer.getFPS()), 10, 10)
     love.graphics.setColor(255, 255, 255, 255)
+end
+-- extend function for paddles
+function extendPaddle(paddle)
+    if paddle.boosters['paddle_extender'].active then
+        paddle.height = 30
+    else
+        paddle.height = 20
+    end
 end
