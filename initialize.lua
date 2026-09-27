@@ -5,7 +5,7 @@ function createShieldSettings()
     return {time = 5, width = 50, height = 50}
 end
 function createPaddleExtender()
-    return {time=5,active=false}
+    return {time=7,active=false}
 end
 function createPaddleExtenderSettings()
     return {time = 2,width = 50, height = 50}

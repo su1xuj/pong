@@ -121,11 +121,14 @@ function love.load()
     paddle_extender_booster = Booster(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', paddle_extender_settings.time, paddle_extender_settings.width, paddle_extender_settings.height)
 
     -- initialize effects icons
-    shield_effect_player1 = Effect(player1.x + player1.width + 20, 0, 'sprites/shield.png', 'shield', 12, 12)
-    shield_effect_player2 = Effect(player2.x - 20, 0, 'sprites/shield.png', 'shield', 12, 12)
-    padlle_extender_effect_player1 = Effect(player1.x + player1.width + 20 + 40, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
-    padlle_extender_effect_player2 = Effect(player2.x - 20 - 40, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
+    shield_effect_player1 = Effect(0, 0, 'sprites/shield.png', 'shield', 12, 12)
+    shield_effect_player2 = Effect(0, 0, 'sprites/shield.png', 'shield', 12, 12)
+    padlle_extender_effect_player1 = Effect(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
+    padlle_extender_effect_player2 = Effect(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
 
+    -- effects for players
+    effectsPlayer1 = {shield_effect_player1, padlle_extender_effect_player1}
+    effectsPlayer2 = {shield_effect_player2, padlle_extender_effect_player2}
     -- global table with all boosters objects
     boosters = {shield_booster, paddle_extender_booster }
 
@@ -243,7 +246,9 @@ function love.update(dt)
         else
             padlle_extender_effect_player2.visible = false
         end
-       
+        
+        queueEffectForPlayer1(effectsPlayer1)
+        queueEffectForPlayer2(effectsPlayer2)
         -- paddle extender booster effects
         extendPaddle(player1)
         extendPaddle(player2)
@@ -492,5 +497,24 @@ function extendPaddle(paddle)
         paddle.height = 30
     else
         paddle.height = 20
+    end
+end
+-- effect icons drawing queue for player1
+function queueEffectForPlayer1(effects)
+    local effectX = player1.x + player1.width + 40
+    for _,effect in ipairs(effects) do
+        if effect.visible then
+            effect.x = effectX
+            effectX = effectX + 40
+        end
+    end
+end
+function queueEffectForPlayer2(effects)
+    local effectX = player2.x - 40 - 30
+    for _,effect in ipairs(effects) do
+        if effect.visible then
+            effect.x = effectX
+            effectX = effectX - 40
+        end
     end
 end
