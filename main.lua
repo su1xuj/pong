@@ -44,6 +44,8 @@ require 'Boosters'
 require 'effect_icon'
 
 require 'initialize'
+
+require 'Button'
 -- size of our actual window
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
@@ -98,6 +100,7 @@ function love.load()
     -- actual window no matter its dimensions
     push.setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, { upscale = 'normal' })
 
+    startButton1 = Button(100,100, "1 VS 1", "startFor1VS1", 60, 30)
     -- boosters effects initialize for players
     boostersForPlayers = createBoostersForPlayer()
 
@@ -431,9 +434,10 @@ function love.draw()
     -- render different things depending on which part of the game we're in
     if gameState == 'start' then
         -- UI messages
+        startButton1:render()
         love.graphics.setFont(smallFont)
         love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
-        love.graphics.printf('Press Enter to begin!', 0, 20, VIRTUAL_WIDTH, 'center')
+
     elseif gameState == 'serve' then
         -- UI messages
         love.graphics.setFont(smallFont)
@@ -451,14 +455,17 @@ function love.draw()
     end
 
     -- show the score before ball is rendered so it can move over the text
-    displayScore()
-    shield_effect_player1:render()
-    shield_effect_player2:render()
-    padlle_extender_effect_player1:render()
-    padlle_extender_effect_player2:render()
-    player1:render()
-    player2:render()
-    ball:render()
+    if(gameState ~= "start") then
+        displayScore()
+        shield_effect_player1:render()
+        shield_effect_player2:render()
+        padlle_extender_effect_player1:render()
+        padlle_extender_effect_player2:render()
+        player1:render()
+        player2:render()
+        ball:render()
+    end
+    
     for _, booster in ipairs(boosters) do
         booster:render()
     end
@@ -515,6 +522,22 @@ function queueEffectForPlayer2(effects)
         if effect.visible then
             effect.x = effectX
             effectX = effectX - 40
+        end
+    end
+end
+
+-- create button 
+
+--add mouse click listener
+function love.mousepressed(x, y, button)
+    if button == 1 and gameState == "start" then
+        local gameX, gameY = push.toGame(x, y)
+
+        if gameX >= startButton1.x
+            and gameX <= startButton1.x + startButton1.width
+            and gameY >= startButton1.y
+            and gameY <= startButton1.y + startButton1.height then
+            gameState = "serve"
         end
     end
 end
