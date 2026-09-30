@@ -99,8 +99,10 @@ function love.load()
     -- initialize our virtual resolution, which will be rendered within our
     -- actual window no matter its dimensions
     push.setupScreen(VIRTUAL_WIDTH, VIRTUAL_HEIGHT, { upscale = 'normal' })
-
+    -- button for 1 vs 1 mode active
     startButton1 = Button(100,100, "1 VS 1", "startFor1VS1", 60, 30)
+    -- button for 1 vs bot mode active 
+    startButton2 = Button(VIRTUAL_WIDTH - 100 - 60, 100, "1 VS BOT", "startFor1VSBot",60, 30 )
     -- boosters effects initialize for players
     boostersForPlayers = createBoostersForPlayer()
 
@@ -153,6 +155,11 @@ function love.load()
     -- 3. 'play' (the ball is in play, bouncing between paddles)
     -- 4. 'done' (the game is over, with a victor, ready for restart)
     gameState = 'start'
+
+    -- the game mode can be :
+    -- 1. '1 vs 1' (players moving theyr paddles with binded keys)
+    -- 2. '1 vs bot' (player1 plays vs bot(player2) )
+    game_mode = ''
 end
 
 --[[
@@ -360,15 +367,17 @@ function love.update(dt)
         player1.dy = 0
     end
 
-    -- player 2
-    if love.keyboard.isDown('up') then
+    -- player 2 or bot 
+    if love.keyboard.isDown('up') and game_mode == "1 vs 1" then
         player2.dy = -PADDLE_SPEED
-    elseif love.keyboard.isDown('down') then
+    elseif love.keyboard.isDown('down') and game_mode == "1 vs 1" then
         player2.dy = PADDLE_SPEED
     else
         player2.dy = 0
     end
-
+    if game_mode == "1 vs bot" then
+        bot_playing_simulation(player2, ball)
+    end
     -- update our ball based on its DX and DY only if we're in play state;
     -- scale the velocity by dt so movement is framerate-independent
     if gameState == 'play' then
@@ -434,9 +443,10 @@ function love.draw()
     -- render different things depending on which part of the game we're in
     if gameState == 'start' then
         -- UI messages
+        startButton2:render()
         startButton1:render()
-        love.graphics.setFont(smallFont)
-        love.graphics.printf('Welcome to Pong!', 0, 10, VIRTUAL_WIDTH, 'center')
+        love.graphics.setFont(largeFont)
+        love.graphics.printf('Welcome to Pong!', 0, 50, VIRTUAL_WIDTH, 'center')
 
     elseif gameState == 'serve' then
         -- UI messages
@@ -526,8 +536,24 @@ function queueEffectForPlayer2(effects)
     end
 end
 
--- create button 
-
+-- add bot simulation function for 1 vs bot mode (easy bot)
+function bot_playing_simulation(paddle, ball) 
+    if paddle.y + paddle.height <= ball.y then
+        paddle.dy = PADDLE_SPEED
+    end
+    if paddle.y >= ball.y + ball.height then
+        paddle.dy = -PADDLE_SPEED
+    end
+end
+-- hard bot version
+function bot_playing_simulation_hard(paddle, ball) 
+    if paddle.y + paddle.height / 2 + 5 <= ball.y then
+        paddle.dy = PADDLE_SPEED
+    end
+    if paddle.y + paddle.height / 2 - 5>= ball.y then
+        paddle.dy = -PADDLE_SPEED
+    end
+end
 --add mouse click listener
 function love.mousepressed(x, y, button)
     if button == 1 and gameState == "start" then
@@ -537,7 +563,19 @@ function love.mousepressed(x, y, button)
             and gameX <= startButton1.x + startButton1.width
             and gameY >= startButton1.y
             and gameY <= startButton1.y + startButton1.height then
-            gameState = "serve"
+                gameState = "serve"
+                game_mode = "1 vs 1"
+        end
+    end
+    if button == 1 and gameState == "start" then
+        local gameX, gameY = push.toGame(x, y)
+
+        if gameX >= startButton2.x
+            and gameX <= startButton2.x + startButton2.width
+            and gameY >= startButton2.y
+            and gameY <= startButton2.y + startButton2.height then
+                gameState = "serve"
+                game_mode = "1 vs bot"
         end
     end
 end
