@@ -27,13 +27,14 @@ Paddle = Class{}
     have their own x, y, width, and height values, thus serving as containers
     for data. In this sense, they're very similar to structs in C.
 ]]
-function Paddle:init(x, y, width, height, boosters)
+function Paddle:init(x, y, width, height, boosters, effects)
     self.x = x
     self.y = y
     self.width = width
     self.height = height
     self.dy = 0
     self.boosters = boosters
+    self.effects = effects
 end
 
 function Paddle:update(dt)
@@ -59,11 +60,9 @@ function Paddle:processing_boosters(dt)
             booster.time = booster.time - dt
         end
         if booster.time <= 0 and booster.active then
-            if name == "shield" then
-                self.boosters[name] = createShield()
-            elseif name == "paddle_extender" then
-                self.boosters[name] = createPaddleExtender()
-            end
+            local boosters = createBoostersForPlayer()
+            self.boosters[name] = boosters[name]
+            self.effects[name].visible = false
         end
     end
 end
@@ -77,4 +76,7 @@ end
 ]]
 function Paddle:render()
     love.graphics.rectangle('fill', self.x, self.y, self.width, self.height)
+    for _, effect in pairs(self.effects) do
+        effect:render()
+    end
 end

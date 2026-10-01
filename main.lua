@@ -106,10 +106,21 @@ function love.load()
     -- boosters effects initialize for players
     boostersForPlayers = createBoostersForPlayer()
 
+    -- initialize effects icons
+    shield_effect_player1 = Effect(0, 0, 'sprites/shield.png', 'shield', 12, 12)
+    shield_effect_player2 = Effect(0, 0, 'sprites/shield.png', 'shield', 12, 12)
+    padlle_extender_effect_player1 = Effect(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
+    padlle_extender_effect_player2 = Effect(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
+    magnet_effect_player1 = Effect(0, 0, "sprites/magnet.png", "magnet", 12, 12)
+    magnet_effect_player2 = Effect(0, 0, "sprites/magnet.png", "magnet", 12, 12)
+    -- effects for players
+    effectsPlayer1 = {["shield"] = shield_effect_player1,["paddle_extender"] = padlle_extender_effect_player1, ["magnet"] = magnet_effect_player1}
+    effectsPlayer2 = {["shield"] = shield_effect_player2,["paddle_extender"] = padlle_extender_effect_player2, ["magnet"] = magnet_effect_player2}
+    
     -- initialize our player paddles; make them global so that they can be
     -- detected by other functions and modules
-    player1 = Paddle(10, 30, 5, 20, createBoostersForPlayer())
-    player2 = Paddle(VIRTUAL_WIDTH - 15, VIRTUAL_HEIGHT - 30, 5, 20, createBoostersForPlayer())
+    player1 = Paddle(10, 30, 5, 20, createBoostersForPlayer(),effectsPlayer1)
+    player2 = Paddle(VIRTUAL_WIDTH - 15, VIRTUAL_HEIGHT - 30, 5, 20, createBoostersForPlayer(),effectsPlayer2)
 
     -- place a ball in the middle of the screen
     ball = Ball(VIRTUAL_WIDTH / 2 - 2, VIRTUAL_HEIGHT / 2 - 2, 4, 4)
@@ -117,25 +128,19 @@ function love.load()
     -- initialize boosters setings
     shield_settings = createShieldSettings()
     paddle_extender_settings = createPaddleExtenderSettings()
+    magnet_settings = createMagnetSettings()
 
-    -- table for all settings
-    settings = {["shield"] = shield_settings, ["paddle_extender"] = paddle_extender_settings}
+    -- table for all boosters settings
+    settings = {["shield"] = shield_settings, ["paddle_extender"] = paddle_extender_settings, ["magnet"] = magnet_settings}
 
     -- initialize boosters 
     shield_booster = Booster(0, 0, 'sprites/shield.png', 'shield', shield_settings.time, shield_settings.width, shield_settings.height)
     paddle_extender_booster = Booster(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', paddle_extender_settings.time, paddle_extender_settings.width, paddle_extender_settings.height)
+    magnet_booster = Booster(0, 0, 'sprites/magnet.png', 'magnet', magnet_settings.time, magnet_settings.width, magnet_settings.height)
 
-    -- initialize effects icons
-    shield_effect_player1 = Effect(0, 0, 'sprites/shield.png', 'shield', 12, 12)
-    shield_effect_player2 = Effect(0, 0, 'sprites/shield.png', 'shield', 12, 12)
-    padlle_extender_effect_player1 = Effect(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
-    padlle_extender_effect_player2 = Effect(0, 0, 'sprites/paddle_extender.png', 'paddle_extender', 12, 12)
-
-    -- effects for players
-    effectsPlayer1 = {shield_effect_player1, padlle_extender_effect_player1}
-    effectsPlayer2 = {shield_effect_player2, padlle_extender_effect_player2}
+    
     -- global table with all boosters objects
-    boosters = {shield_booster, paddle_extender_booster }
+    boosters = {shield_booster, paddle_extender_booster, magnet_booster }
 
     -- initialize score variables
     player1Score = 0
@@ -191,7 +196,7 @@ function love.update(dt)
             ball.dx = -math.random(140, 200)
         end
 
-        -- hide shield
+        -- hide all boosters
         for _, booster in ipairs(boosters) do
             booster.visible = false
             booster.time = settings[booster.name].time
@@ -200,6 +205,12 @@ function love.update(dt)
 
         player1.boosters = createBoostersForPlayer()
         player2.boosters = createBoostersForPlayer()
+        for _, effect in pairs(player1.effects) do
+            effect.visible = false
+        end
+        for _, effect in pairs(player2.effects) do
+            effect.visible = false
+        end
     elseif gameState == 'play' then
 
         -- boosters sprite spawn
@@ -230,38 +241,36 @@ function love.update(dt)
                 end
             end
         end
-        -- on effect icon 
-        if player1.boosters['shield'].active then
-            shield_effect_player1.visible = true
-            shield_effect_player1.time = player1.boosters['shield'].time
-        else
-            shield_effect_player1.visible = false
+        -- visible all active effects 
+        for _, effect in pairs(player1.effects) do
+            if player1.boosters[effect.name].active then
+                effect.visible = true
+                effect.time = player1.boosters[effect.name].time
+            end
         end
-        if player2.boosters['shield'].active then
-            shield_effect_player2.visible = true
-            shield_effect_player2.time = player2.boosters['shield'].time
-        else
-            shield_effect_player2.visible = false
-        end
-
-        if player1.boosters['paddle_extender'].active then
-            padlle_extender_effect_player1.visible = true
-            padlle_extender_effect_player1.time = player1.boosters['paddle_extender'].time
-        else
-            padlle_extender_effect_player1.visible = false
-        end
-        if player2.boosters['paddle_extender'].active then
-            padlle_extender_effect_player2.visible = true
-            padlle_extender_effect_player2.time = player2.boosters['paddle_extender'].time
-        else
-            padlle_extender_effect_player2.visible = false
+        for _, effect in pairs(player2.effects) do
+            if player2.boosters[effect.name].active then
+                effect.visible = true
+                effect.time = player2.boosters[effect.name].time
+            end
         end
         
-        queueEffectForPlayer1(effectsPlayer1)
-        queueEffectForPlayer2(effectsPlayer2)
+        
+        queueEffectForPlayer1(player1)
+        queueEffectForPlayer2(player2)
         -- paddle extender booster effects
         extendPaddle(player1)
         extendPaddle(player2)
+        -- magnet effect 
+
+        -- if ball moving in side of player1 
+        -- effect is working for also for player2
+        if ball.dx < 0 then
+            magnet_effect_cast(player1, ball)
+        else
+            magnet_effect_cast(player2, ball)
+        end
+        
         -- detect ball collision with paddles, reversing dx if true and
         -- slightly increasing it, then altering the dy based on the position
         -- at which it collided, then playing a sound effect
@@ -315,6 +324,7 @@ function love.update(dt)
                 ball.dx = -ball.dx
                 sounds['shield_broke']:play()
                 player1.boosters["shield"] = createShield()
+                player1.effects["shield"].visible = false
             else
                 servingPlayer = 1
                 player2Score = player2Score + 1
@@ -339,6 +349,7 @@ function love.update(dt)
                 ball.dx = -ball.dx
                 sounds['shield_broke']:play()
                 player2.boosters["shield"] = createShield()
+                player2.effects["shield"].visible = false
             else
                 servingPlayer = 2
                 player1Score = player1Score + 1
@@ -517,18 +528,18 @@ function extendPaddle(paddle)
     end
 end
 -- effect icons drawing queue for player1
-function queueEffectForPlayer1(effects)
+function queueEffectForPlayer1(player)
     local effectX = player1.x + player1.width + 40
-    for _,effect in ipairs(effects) do
+    for _,effect in pairs(player.effects) do
         if effect.visible then
             effect.x = effectX
             effectX = effectX + 40
         end
     end
 end
-function queueEffectForPlayer2(effects)
+function queueEffectForPlayer2(player)
     local effectX = player2.x - 40 - 30
-    for _,effect in ipairs(effects) do
+    for _,effect in pairs(player.effects) do
         if effect.visible then
             effect.x = effectX
             effectX = effectX - 40
@@ -545,13 +556,26 @@ function bot_playing_simulation(paddle, ball)
         paddle.dy = -PADDLE_SPEED
     end
 end
--- hard bot version
+-- hard bot version for future
 function bot_playing_simulation_hard(paddle, ball) 
     if paddle.y + paddle.height / 2 + 5 <= ball.y then
         paddle.dy = PADDLE_SPEED
     end
     if paddle.y + paddle.height / 2 - 5>= ball.y then
         paddle.dy = -PADDLE_SPEED
+    end
+end
+-- magnet_effect_cast
+function magnet_effect_cast(paddle, ball)
+    if paddle.boosters["magnet"].active and math.abs(ball.x - paddle.x)  < 120 then
+        if paddle.y + paddle.height / 2 - 5 <= ball.y  then
+            ball.dy = -100
+        
+        elseif paddle.y + paddle.height /2 + 5>= ball.y then
+            ball.dy = 100
+        else
+            ball.dy = 0
+        end
     end
 end
 --add mouse click listener
